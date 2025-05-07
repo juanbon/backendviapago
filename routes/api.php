@@ -7,6 +7,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\GenericABMController;
 use App\Http\Controllers\WebViewRenderController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\TransactionTypeController;
 use App\Models\QuestionCategory;
 use App\Models\Image;
 use App\Models\Reason;
@@ -25,7 +26,8 @@ Route::middleware('x-token')->get('/menu', [MenuController::class, 'index']);
 
 // routes/api.php
 
-Route::get('/transactions/summary', [TransactionController::class, 'summary']);
+Route::middleware('x-token')->get('/transacciones', [TransactionController::class, 'summary']);
+Route::middleware('x-token')->get('/transacciones/tipos', [TransactionTypeController::class, 'index']); 
 
 
 // Route::middleware('x-token')->get('/transactions/summary', [TransactionController::class, 'summary']);
