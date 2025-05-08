@@ -29,6 +29,20 @@ class Transaction extends Model
         'currentBalance'
     ];
 
+
+    protected $visible = [
+        // Campos de resumen
+        'day', 'type', 'status', 'total', 'total_amount', 'avg_amount', 'date_block',
+    
+        // Campos alias usados para filtros
+        'date', 'number', 'amount', 'type',
+    
+        // Campos importantes adicionales
+        'sourceName', 'targetName', 'reason',
+        'status', 'createdAt', 'targetCvu', 'sourceCvu', 'currentBalance'
+    ];
+
+
     protected $dates = ['date', 'createdAt', 'updatedAt', 'deletedAt'];
 
     // Relaciones
@@ -56,6 +70,14 @@ class Transaction extends Model
     {
         return $this->belongsTo(Card::class, 'cardId');
     }
+
+    public static $filterAliases = [
+        'FechaDesde'      => 'date',
+        'FechaHasta'      => 'date',
+        'NroTransaccion'  => 'number',
+        'Importe'         => 'amount',
+        'TypeTransaction' => 'type',
+    ];
 
     // etc., otras relaciones opcionales como branch, store, etc.
 }

@@ -21,120 +21,76 @@ class GenericABMController extends Controller
 
 
 
-/*
+
+
 
 
     public function index(Request $request, $query = null)
     {
+        $model = $this->getModel($request);
+        $queryBuilder = $model->newQuery();
+    
+        // Si hay un ID en la URL, redirige a la función show
         if (is_numeric($query) && count($request->query()) === 0) {
             return $this->show($request, $query);
         }
     
-        $model = $this->getModel($request);
-        $queryBuilder = $model->newQuery();
+        $excluded = ['paginated', 'Page', 'per_page', 'page', 'PageSize', 'sortField', 'sortOrder'];
     
-        if ($query !== null && $query !== 'all') {
-            $queryBuilder->where('id', $query);
-        }
-    
-        $excluded = ['paginated', 'Page', 'per_page', 'page'];
-    
-        // Acá definís los alias
+        // Mapeo de alias si existe
         $filterAliases = property_exists($model, 'filterAliases') ? $model::$filterAliases : [];
     
+        // Filtros por query string
         foreach ($request->query() as $field => $value) {
             if (!in_array($field, $excluded) && $value !== null && $value !== '') {
                 $dbField = $filterAliases[$field] ?? $field;
-                $queryBuilder->where($dbField, 'like', '%' . $value . '%');
-            }
-        }
-    
-        $result = $request->boolean('paginated', false)
-            ? $queryBuilder->paginate(10)
-            : $queryBuilder->get();
-    
-        return response()->json($result, 200, ['Content-Type' => 'application/json; charset=UTF-8']);
-    }
-
-
-*/ 
-
-
-
-public function index(Request $request, $query = null)
-{
-    $model = $this->getModel($request);
-    $queryBuilder = $model->newQuery();
-
-    // Si hay un ID en la URL, redirige a la función show
-    if (is_numeric($query) && count($request->query()) === 0) {
-        return $this->show($request, $query);
-    }
-
-    $excluded = ['paginated', 'Page', 'per_page', 'page'];
-
-    // Definir el mapeo de alias si es necesario
-    $filterAliases = property_exists($model, 'filterAliases') ? $model::$filterAliases : [];
-
-    // Si hay parámetros en la URL, los usamos para buscar
-    foreach ($request->query() as $field => $value) {
-        if (!in_array($field, $excluded) && $value !== null && $value !== '') {
-            $dbField = $filterAliases[$field] ?? $field;
-    
-            // ✅ Asegurarse de que NO sea un array antes de aplicar LIKE
-            if (!is_array($value)) {
-                $queryBuilder->where($dbField, 'like', '%' . $value . '%');
-            }
-        }
-    }
-    
-
-    if (isset($request->filter['where'])) {
-        foreach ($request->filter['where'] as $field => $conditions) {
-            foreach ($conditions as $op => $value) {
-                switch ($op) {
-                    case 'eq': $queryBuilder->where($field, '=', $value); break;
-                    case 'lt': $queryBuilder->where($field, '<', $value); break;
-                    // etc.
+                if (!is_array($value)) {
+                    $queryBuilder->where($dbField, 'like', '%' . $value . '%');
                 }
             }
         }
-    }
     
-    
-
-    // Si se quiere paginar, se hace
-    $result = $request->boolean('paginated', false)
-        ? $queryBuilder->paginate(10)
-        : $queryBuilder->get();
-
-    return response()->json($result, 200, ['Content-Type' => 'application/json; charset=UTF-8']);
-}
-
-
-
-/*
-
-    public function index(Request $request)
-    {
-        $model = $this->getModel($request);
-        $query = $model->newQuery();
-    
-        $excluded = ['paginated', 'Page', 'per_page','page'];
-        foreach ($request->query() as $field => $value) {
-            if (!in_array($field, $excluded) && $value !== null && $value !== '') {
-                $query->where($field, 'like', '%' . $value . '%');
+        // Filtros avanzados
+        if ($request->has('filter.where')) {
+            foreach ($request->filter['where'] as $field => $conditions) {
+                foreach ($conditions as $op => $value) {
+                    switch ($op) {
+                        case 'eq': $queryBuilder->where($field, '=', $value); break;
+                        case 'lt': $queryBuilder->where($field, '<', $value); break;
+                        case 'gt': $queryBuilder->where($field, '>', $value); break;
+                        case 'lte': $queryBuilder->where($field, '<=', $value); break;
+                        case 'gte': $queryBuilder->where($field, '>=', $value); break;
+                        case 'ne': $queryBuilder->where($field, '!=', $value); break;
+                    }
+                }
             }
         }
     
-        $result = $request->boolean('paginated', false)
-            ? $query->paginate(10)
-            : $query->get();
+        // **Asegurándonos que la paginación sea manejada correctamente:**
+        $shouldPaginate = $request->input('Page', 1); // Página actual, por defecto es la 1
+        $perPage = $request->input('PageSize', 20);  // Tamaño de la página (por defecto 20)
+    
+        // Reporte completo (sin paginar)
+        if ($request->input('Page') == -1) {
+            $result = $queryBuilder->get(); // reporte completo
+        } else {
+            // Si la paginación está habilitada
+            $result = $queryBuilder->paginate($perPage, ['*'], 'page', $shouldPaginate);
+        }
     
         return response()->json($result, 200, ['Content-Type' => 'application/json; charset=UTF-8']);
     }
     
-    */
+
+
+
+
+
+
+
+
+
+
 
     public function store(Request $request)
     {

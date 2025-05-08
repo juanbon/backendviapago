@@ -20,9 +20,10 @@ class TransactionController extends Controller
             $query->whereBetween('date', [$request->from, $request->to]);
         }
     
-        // Filtros opcionales
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        // Filtro por tipos pasados como una cadena delimitada por comas (usando 'types' en lugar de 'type')
+        if ($request->filled('types')) {
+            $types = explode(',', $request->types);  // Convertimos la cadena a un arreglo
+            $query->whereIn('type', $types);  // Filtrar por los tipos
         }
     
         if ($request->filled('status')) {
@@ -42,16 +43,15 @@ class TransactionController extends Controller
         type, 
         COUNT(*) as total, 
         SUM(amount) as total_amount, 
-        AVG(amount) as avg_amount, 
+        AVG(amount) as avg_amount, status,
         FLOOR((DAYOFYEAR(date) - 1) / 21) as date_block')
-->groupBy(DB::raw('FLOOR((DAYOFYEAR(date) - 1) / 21)'), 'type')
-->orderBy('day', 'asc')
-->get();
-
-
+        ->groupBy(DB::raw('FLOOR((DAYOFYEAR(date) - 1) / 21)'), 'type','status')
+        ->orderBy('day', 'asc')
+        ->get();
     
         return response()->json($summary);
     }
+    
     
     
 

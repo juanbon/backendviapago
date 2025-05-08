@@ -17,6 +17,7 @@ use App\Models\Recharge;
 use App\Models\WebView;
 use App\Models\WebViewType;
 use App\Models\WebViewSubType;
+use App\Models\Transaction;
 
 Route::post('/users/user/signin', [AuthController::class, 'signin']);
 
@@ -111,6 +112,14 @@ Route::middleware(['x-token'])->prefix('images')->group(function () {
 });
 
 
+Route::middleware(['x-token'])->prefix('reportetransacciones')->group(function () {
+    Route::get('/', [GenericABMController::class, 'index'])->defaults('model', Transaction::class);
+    Route::get('/{id}', [GenericABMController::class, 'show'])->where('id', '[0-9]+')->defaults('model', Transaction::class);
+    Route::get('/{query}', [GenericABMController::class, 'index'])->defaults('model', Transaction::class);
+    Route::post('/', [GenericABMController::class, 'store'])->defaults('model', Transaction::class);
+    Route::put('/{id}', [GenericABMController::class, 'update'])->where('id', '[0-9]+')->defaults('model', Transaction::class);
+    Route::delete('/{id}', [GenericABMController::class, 'destroy'])->where('id', '[0-9]+')->defaults('model', Transaction::class);
+});
 
 
 
