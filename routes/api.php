@@ -8,6 +8,8 @@ use App\Http\Controllers\GenericABMController;
 use App\Http\Controllers\WebViewRenderController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransactionTypeController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\StoreController;
 use App\Models\QuestionCategory;
 use App\Models\Image;
 use App\Models\Reason;
@@ -25,7 +27,15 @@ Route::post('/users/user/signin', [AuthController::class, 'signin']);
 
 Route::middleware('x-token')->get('/menu', [MenuController::class, 'index']);
 
+Route::middleware('x-token')->get('/users', [UserController::class, 'index']);
+Route::middleware('x-token')->get('/users/{id}', [UserController::class, 'show']);
 // routes/api.php
+
+Route::middleware('x-token')->get('/users//{id}', [UserController::class, 'show']);
+
+
+
+Route::middleware('x-token')->get('/stores', [StoreController::class, 'index']);
 
 Route::middleware('x-token')->get('/transacciones', [TransactionController::class, 'summary']);
 Route::middleware('x-token')->get('/transacciones/tipos', [TransactionTypeController::class, 'index']); 

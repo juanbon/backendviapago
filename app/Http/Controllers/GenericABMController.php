@@ -6,6 +6,8 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
+
+
 class GenericABMController extends Controller
 {
     protected function getModel(Request $request): Model
@@ -41,13 +43,29 @@ class GenericABMController extends Controller
         $filterAliases = property_exists($model, 'filterAliases') ? $model::$filterAliases : [];
     
         // Filtros por query string
+        
         foreach ($request->query() as $field => $value) {
-            if (!in_array($field, $excluded) && $value !== null && $value !== '') {
+
+            if (!in_array($field, $excluded) && $value !== null && $value !== '' && $value !== 'null') {
+
                 $dbField = $filterAliases[$field] ?? $field;
-                if (!is_array($value)) {
+            
+                // Si el valor tiene formato de fecha (YYYY-MM-DD)
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                    if (Str::contains(Str::lower($field), 'desde')) {
+                        $queryBuilder->where('date', '>=', $value);
+                    } elseif (Str::contains(Str::lower($field), 'hasta')) {
+                        $queryBuilder->where('date', '<=', $value);
+                    } else {
+                        // Si no dice desde ni hasta, filtra exacto por campo
+                        $queryBuilder->where($dbField, '=', $value);
+                    }
+                } else {
                     $queryBuilder->where($dbField, 'like', '%' . $value . '%');
                 }
             }
+            
+            
         }
     
         // Filtros avanzados
@@ -183,7 +201,7 @@ class GenericABMController extends Controller
         $item->delete();
     
 
-        $this->logOperation($model, 'delete', auth()->id());
+     //    $this->logOperation($model, 'delete', auth()->id());
 
         return response()->json(['message' => 'Deleted successfully']);
     }

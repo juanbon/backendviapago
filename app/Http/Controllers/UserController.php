@@ -41,6 +41,71 @@ class UserController extends Controller
         ]);
     }
 
+
+
+    public function index(Request $request)
+    {
+        $filter = $request->input('filter', []);
+    
+        $query = User::query();
+    
+        // Filtro por campos específicos (filter[where])
+        if (isset($filter['where'])) {
+            foreach ($filter['where'] as $field => $condition) {
+                if (is_array($condition)) {
+                    foreach ($condition as $operator => $value) {
+                        if ($operator === 'like') {
+                            if (!empty($value)) {
+                                $query->where($field, 'like', $value);
+                            }
+                        }
+                        // Agregá más operadores si necesitás
+                    }
+                } elseif (!empty($condition)) {
+                    $query->where($field, $condition);
+                }
+            }
+        }
+    
+        // Filtro de búsqueda global (filter[query])
+        if (!empty($filter['query'])) {
+            $search = $filter['query'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+    
+        // Ordenamiento (filter[order])
+        if (isset($filter['order']) && is_array($filter['order'])) {
+            foreach ($filter['order'] as $field => $direction) {
+                $query->orderBy($field, $direction);
+            }
+        }
+    
+        // Paginación
+        $offset = isset($filter['offset']) ? (int) $filter['offset'] : 0;
+        $limit = isset($filter['limit']) ? (int) $filter['limit'] : 30;
+    
+        $query->offset($offset)->limit($limit);
+    
+        return response()->json(
+           //  'data' =>  $query->get()
+           $query->get()
+        );
+    }
+
+
+    public function show($id)
+    {
+        // Buscar el usuario por el ID
+        $user = User::findOrFail($id);
+
+        // Retornar los datos del usuario como JSON
+        return response()->json($user);
+    }
+
     /**
      * Logout del usuario (revoca tokens)
      */
